@@ -1,0 +1,64 @@
+#!/bin/bash
+
+#this script creates statistics file named 'stats_delta.txt'
+
+# stats fields:
+# level file_name file_source_size file_compressed_size decompression_time decompression_ratio
+
+
+
+
+let i=1
+
+while [ $i -le $1 ]; do # scan all files
+
+	cd ..
+	cd packet_files
+	
+	packets_record=( `ls -l | grep packets_100k_1_10_arr_$i.bin` )
+	packets_size=${packets_record[4]}
+
+
+
+	cd ..
+	cd delta_encoding
+
+
+	# compression
+	./delta_encoding -e ../packet_files/packets_100k_1_10_arr_$i.bin compressed$i.bin 100000
+
+
+	#decompression
+	begin_time_ms=$(($(date +%s%N)/1000)) # time in micro seconds
+
+	./delta_encoding -d compressed$i.bin source$i.bin 100000
+
+	end_time_ms=$(($(date +%s%N)/1000)) # time in micro seconds
+
+
+	let diff=$end_time_ms-$begin_time_ms # calc time compression
+
+
+	compressed_record=( `ls -l | grep compressed$i.bin` )
+	compressed_size=${compressed_record[4]}
+
+
+	path="../stats_delta/100k_1_10_arr/stats_delta_100k_1_10_arr.txt"
+
+	echo -n -e "$packets_size\t" >> $path	
+	echo -n -e "$compressed_size\t" >> $path
+	echo -n -e "$diff\t" >> $path
+	echo "" >> $path
+
+
+
+	
+	rm -f source$i.bin
+	rm -f compressed$i.bin
+
+	let i=i+1
+
+
+done
+	
+

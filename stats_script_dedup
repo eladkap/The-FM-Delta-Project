@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#this script creates statistics file named 'stats'
+
+# stats fields:
+# source size, compressed size, decompression time
+
+#parameters
+#1 = files number
+
+
+
+# MEs : MEPs ratio
+x=3
+
+
+#compress packet files and create statistics file
+
+
+
+
+
+let i=1
+
+while [ $i -le $1 ]; do # scan all files
+	#echo "i=$i"
+	
+	
+	cd ..
+	cd packet_files
+
+	# retrieve source file fields
+	source_record=( `ls -l | grep packets_100k_1_10_arr_$i.bin` )
+	
+	# retrieve source file size
+	source_size=${source_record[4]}
+	
+
+	
+	
+	cd ..
+	cd pcompress-2.4
+
+	
+	# compression				
+	./pcompress -D -c bzip2 -l1 -s64m -t1 ../packet_files/packets_100k_1_10_arr_$i.bin
+	
+	# decompression
+	begin_time_ms=$(($(date +%s%N)/1000)) # time in micro seconds
+	./pcompress -d -t1 packets_100k_1_10_arr_$i.bin.pz packets_source$i.bin
+	end_time_ms=$(($(date +%s%N)/1000)) # time in micro seconds
+			
+	let diff=$end_time_ms-$begin_time_ms # calc time compression
+		
+	cd ..
+	cd packet_files	
+	# retrieve compressed file fields
+	compressed_record=( `ls -l | grep packets_100k_1_10_arr_$i.bin.pz` )
+			
+	# retrieve compressed file size
+	compressed_size=${compressed_record[4]}
+
+
+	path="../stats_dedup/100k_1_10_arr/stats_dedup_100k_1_10_arr.txt"
+	
+	echo -n -e "$source_size\t"  >> $path
+	echo -n -e "$compressed_size\t"  >> $path
+	echo -n -e "$diff\t" >> $path					
+	echo "" >> $path
+
+
+
+	let i=i+1
+
+done	
+	
+	
+			
+	
+
+

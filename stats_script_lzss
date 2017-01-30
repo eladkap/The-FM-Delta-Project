@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#this script creates statistics file named 'stats'
+
+# stats fields:
+# x(window) y(lookahead) file_name file_source_size file_compressed_size decompression_time compression_ratio
+
+#parameters
+#1 = files number
+
+
+
+let i=1
+let p=1
+while [ $i -le $1 ]; do # scan all files
+	#echo "index=$i"
+	let x=13
+	
+
+	cd ..
+	cd packet_files
+
+	# retrieve source file fields
+	source_record=( `ls -l | grep packets_100k_1_10_noarr_$i.bin` )
+		
+	#retrieve source file name
+	file_name=${source_record[8]}
+	
+	# retrieve source file size
+	source_size=${source_record[4]}
+	
+	while [ $x -ge 2 ]; do # scan all values of x
+		let y=2
+		while [ $y -lt $x ]; do # scan all values of y
+				
+
+			cd ..
+			cd lzss
+				
+			./encode ../packet_files/packets_100k_1_10_noarr_$i.bin compressed$i.bin $x $y # compression function
+			
+			begin_time_ms=$(($(date +%s%N)/1000)) # time in micro seconds
+			./decode compressed$i.bin source$i.bin $x $y
+			end_time_ms=$(($(date +%s%N)/1000)) # time in micro seconds
+				
+			let diff=$end_time_ms-$begin_time_ms # calc time compression
+				
+			
+			
+
+			
+			
+			# retrieve compressed file fields
+			compressed_record=( `ls -l | grep compressed$i.bin` )
+			
+			# retrieve compressed file size
+			compressed_size=${compressed_record[4]}
+			
+					
+			path="../stats_lzss/100k_1_10_noarr/stats_lzss_100k_1_10_noarr_"
+			
+			echo -n -e "$x\t" >> $path$i.txt
+			echo -n -e "$y\t"  >> $path$i.txt
+			echo -n -e "$source_size\t">> $path$i.txt
+			echo -n -e "$compressed_size\t"  >> $path$i.txt
+			echo -n -e "$diff\t" 	>> $path$i.txt				
+			echo "" >> $path$i.txt
+			
+			let p=p+1
+			let y=y+1
+		done
+		
+		let x=x-1
+	done
+	let i++
+done
+
+
+
+
+
